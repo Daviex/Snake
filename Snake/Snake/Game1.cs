@@ -28,14 +28,17 @@ namespace Snake
 
         Texture2D snakeTex;
         Texture2D border;
+        SpriteFont scoreFont;
 
         List<Vector2> snakeStruct;
         List<Rectangle> bordersRect;
 
+        Rectangle foodPos;
+
         Rectangle headSnake;
 
-        int cw = 10;
-        int score = 0;        
+        int cw;
+        int score;        
 
         string dir;
 
@@ -60,6 +63,7 @@ namespace Snake
             graphics.PreferredBackBufferWidth = 800;
             graphics.PreferredBackBufferHeight = 600;
             Content.RootDirectory = "Content";
+            TargetElapsedTime = new TimeSpan(0, 0, 0, 0, 50);
         }
 
         /// <summary>
@@ -72,8 +76,12 @@ namespace Snake
         {
             stateOfGame = GameState.Playing;
 
+            cw = 10;
+            score = 0;
+
             createBorders();
             createSnake();
+            createFood();
 
             base.Initialize();
         }
@@ -90,6 +98,8 @@ namespace Snake
         {
             spriteBatch = new SpriteBatch(GraphicsDevice);
             snakeTex = Content.Load<Texture2D>("Snake");
+            scoreFont = Content.Load<SpriteFont>("ScoreFont");
+
             border = new Texture2D(GraphicsDevice, 1, 1);
             border.SetData<Color>(new Color[] { Color.White });
         }
@@ -144,33 +154,45 @@ namespace Snake
                             headSnake.X = (int)headPos.X;
                             headSnake.Y = (int)headPos.Y;
 
-                            /*
-                            oldPos = snakeStruct[snakeStruct.Count - 1];
-                            snakeStruct[snakeStruct.Count - 2] = snakeStruct[snakeStruct.Count - 1];
-                            */
-
-                            Console.WriteLine("HeadPos.X: " + headPos.X + "  HeadPos.Y: " + headPos.Y);
+                            //Console.WriteLine("HeadPos.X: " + headPos.X + "  HeadPos.Y: " + headPos.Y);
 
                             for (int i = snakeStruct.Count - 1; i > 0; i--)
                             {
-                                Console.WriteLine("First Was: " + i + " Pos Body.X: " + snakeStruct[i].X + "  " + i + " Pos Body.Y: " + snakeStruct[i].Y);
+                                //Console.WriteLine("First Was: " + i + " Pos Body.X: " + snakeStruct[i].X + "  " + i + " Pos Body.Y: " + snakeStruct[i].Y);
                                 snakeStruct[i] = snakeStruct[i - 1];
-                                Console.WriteLine("Later Was: " + i + " Pos Body.X: " + snakeStruct[i].X + "  " + i + " Pos Body.Y: " + snakeStruct[i].Y);
+                                //Console.WriteLine("Later Was: " + i + " Pos Body.X: " + snakeStruct[i].X + "  " + i + " Pos Body.Y: " + snakeStruct[i].Y);
                             }
-                            snakeStruct[0] = headPos;
-
-
-                            #region Collisions
-
-                            foreach (Rectangle borderRect in bordersRect)
-                            {
-                                if (borderRect.Intersects(headSnake))
-                                    stateOfGame = GameState.Lose;
-
-                            }
+                            snakeStruct[0] = headPos;     
                         }
 
-                        #endregion
+                        #region Collisions
+
+                        foreach (Rectangle borderRect in bordersRect)
+                        {
+                            if (borderRect.Intersects(headSnake))
+                                stateOfGame = GameState.Lose;
+
+                        }
+
+                        if (headSnake.Intersects(foodPos))
+                        {
+                            snakeStruct.Add(snakeStruct[snakeStruct.Count - 1]);
+                            foodPos.X = -500;
+                            foodPos.Y = -500;
+
+                            score++;
+
+                            createFood();
+                        }
+
+                        for (int i = 1; i < snakeStruct.Count - 1; i++)
+                        {
+                            if (headSnake.Contains((int)snakeStruct[i].X, (int)snakeStruct[i].Y))
+                                Initialize();
+                        }
+
+                        #endregion    
+
                     }
                     break;
 
@@ -205,6 +227,12 @@ namespace Snake
             //Draw borders of the game
             DrawLine();
 
+            //Draw Food
+            DrawFood();
+
+            //Draw Score
+            spriteBatch.DrawString(scoreFont, "Score: " + score, new Vector2(10, 573), Color.Blue); 
+
             spriteBatch.End();
 
             base.Draw(gameTime);
@@ -224,6 +252,19 @@ namespace Snake
                     SpriteEffects.None, //Sprite Effect
                     0); //LayerDepth
             }
+        }
+
+        protected void DrawFood()
+        {
+            spriteBatch.Draw(
+                    snakeTex, //Texture2D
+                    foodPos,
+                    null, //Source Rectangle 
+                    Color.White, //Color of line
+                    0, //Rotation
+                    Vector2.Zero, //Origin
+                    SpriteEffects.None, //Sprite Effect
+                    0); //LayerDepth
         }
 
         #endregion
@@ -303,6 +344,16 @@ namespace Snake
             }
 
             headSnake = new Rectangle((int)snakeStruct[0].X, (int)snakeStruct[0].Y, 10, 10);
+        }
+
+        protected void createFood()
+        {
+            Random rand = new Random(Environment.TickCount);
+
+            int x = rand.Next(10, 780);
+            int y = rand.Next(10, 580);
+
+            foodPos = new Rectangle(x, y, 10, 10);
         }
 
         #endregion
