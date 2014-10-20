@@ -117,8 +117,6 @@ namespace Snake
             {
                 case GameState.Playing:
                     {
-                        Vector2 headPos = (Vector2)snakeStruct[snakeStruct.Count - 1];
-
                         if (Keyboard.GetState().IsKeyDown(Keys.Right) && dir != "left")
                             dir = "right";
                         else if (Keyboard.GetState().IsKeyDown(Keys.Left) && dir != "right")
@@ -127,38 +125,49 @@ namespace Snake
                             dir = "up";
                         else if (Keyboard.GetState().IsKeyDown(Keys.Down) && dir != "up")
                             dir = "down";
+                        else if (Keyboard.GetState().IsKeyDown(Keys.Space))
+                            dir = "stop";
 
-                        if (dir == "right")
-                            headPos.X++;
-                        else if (dir == "left")
-                            headPos.X--;
-                        else if (dir == "up")
-                            headPos.Y--;
-                        else if (dir == "down")
-                            headPos.Y++;
-
-                        headSnake.X = (int)headPos.X;
-                        headSnake.Y = (int)headPos.Y;
-
-                        snakeStruct[snakeStruct.Count - 1] = headPos;
-                        //Console.WriteLine("HeadPos.X: " + headPos.X + "  HeadPos.Y: " + headPos.Y);
-
-                        for (int i = snakeStruct.Count - 2; i >= 0; i--)
+                        if (dir != "stop")
                         {
-                            //Console.WriteLine("First Was: " + i + "° Body.X: " + snakeStruct[i].X + "  " + i + "° Body.Y: " + snakeStruct[i].Y);
+                            Vector2 headPos = snakeStruct[0];
 
-                            snakeStruct[i] = new Vector2(snakeStruct[i].X + (headPos.X - snakeStruct[i].X), snakeStruct[i].Y + (headPos.Y - snakeStruct[i].Y));
+                            if (dir == "right")
+                                headPos.X += 10;
+                            else if (dir == "left")
+                                headPos.X -= 10;
+                            else if (dir == "up")
+                                headPos.Y -= 10;
+                            else if (dir == "down")
+                                headPos.Y += 10;
 
-                            //Console.WriteLine("Later Was: " + i + "° Body.X: " + snakeStruct[i].X + "  " + i + "° Body.Y: " + snakeStruct[i].Y);
-                        }
+                            headSnake.X = (int)headPos.X;
+                            headSnake.Y = (int)headPos.Y;
 
-                        #region Collisions
+                            /*
+                            oldPos = snakeStruct[snakeStruct.Count - 1];
+                            snakeStruct[snakeStruct.Count - 2] = snakeStruct[snakeStruct.Count - 1];
+                            */
 
-                        foreach (Rectangle borderRect in bordersRect)
-                        {
-                            if (borderRect.Intersects(headSnake))
-                                stateOfGame = GameState.Lose;
+                            Console.WriteLine("HeadPos.X: " + headPos.X + "  HeadPos.Y: " + headPos.Y);
 
+                            for (int i = snakeStruct.Count - 1; i > 0; i--)
+                            {
+                                Console.WriteLine("First Was: " + i + " Pos Body.X: " + snakeStruct[i].X + "  " + i + " Pos Body.Y: " + snakeStruct[i].Y);
+                                snakeStruct[i] = snakeStruct[i - 1];
+                                Console.WriteLine("Later Was: " + i + " Pos Body.X: " + snakeStruct[i].X + "  " + i + " Pos Body.Y: " + snakeStruct[i].Y);
+                            }
+                            snakeStruct[0] = headPos;
+
+
+                            #region Collisions
+
+                            foreach (Rectangle borderRect in bordersRect)
+                            {
+                                if (borderRect.Intersects(headSnake))
+                                    stateOfGame = GameState.Lose;
+
+                            }
                         }
 
                         #endregion
@@ -215,7 +224,6 @@ namespace Snake
                     SpriteEffects.None, //Sprite Effect
                     0); //LayerDepth
             }
-
         }
 
         #endregion
@@ -289,12 +297,12 @@ namespace Snake
 
             snakeStruct = new List<Vector2>();
 
-            for (int i = 0; i < length; i++)
+            for (int i = length - 1; i >= 0; i--)
             {
                 snakeStruct.Add(new Vector2(i * cw + 15, 18));
             }
 
-            headSnake = new Rectangle((int)snakeStruct[snakeStruct.Count - 1].X, (int)snakeStruct[snakeStruct.Count - 1].Y, 10, 10);
+            headSnake = new Rectangle((int)snakeStruct[0].X, (int)snakeStruct[0].Y, 10, 10);
         }
 
         #endregion
