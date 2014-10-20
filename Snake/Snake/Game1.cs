@@ -34,7 +34,6 @@ namespace Snake
         List<Rectangle> bordersRect;
 
         Rectangle foodPos;
-
         Rectangle headSnake;
 
         int cw;
@@ -154,13 +153,9 @@ namespace Snake
                             headSnake.X = (int)headPos.X;
                             headSnake.Y = (int)headPos.Y;
 
-                            //Console.WriteLine("HeadPos.X: " + headPos.X + "  HeadPos.Y: " + headPos.Y);
-
                             for (int i = snakeStruct.Count - 1; i > 0; i--)
                             {
-                                //Console.WriteLine("First Was: " + i + " Pos Body.X: " + snakeStruct[i].X + "  " + i + " Pos Body.Y: " + snakeStruct[i].Y);
                                 snakeStruct[i] = snakeStruct[i - 1];
-                                //Console.WriteLine("Later Was: " + i + " Pos Body.X: " + snakeStruct[i].X + "  " + i + " Pos Body.Y: " + snakeStruct[i].Y);
                             }
                             snakeStruct[0] = headPos;     
                         }
@@ -171,7 +166,6 @@ namespace Snake
                         {
                             if (borderRect.Intersects(headSnake))
                                 stateOfGame = GameState.Lose;
-
                         }
 
                         if (headSnake.Intersects(foodPos))
