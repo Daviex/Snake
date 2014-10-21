@@ -78,8 +78,6 @@ namespace Snake
         /// </summary>
         protected override void Initialize()
         {
-            stateOfGame = GameState.Playing;
-
             cw = 10;
             score = 0;
             isPaused = false;
@@ -87,6 +85,8 @@ namespace Snake
             createBorders();
             createSnake();
             createFood();
+
+            stateOfGame = GameState.Playing;
 
             base.Initialize();
         }
@@ -135,13 +135,13 @@ namespace Snake
                     {
                         var newState = Keyboard.GetState();
 
-                        if (newState.IsKeyDown(Keys.Right) && oldState.IsKeyDown(Keys.Right) && dir != "left")
+                        if (newState.IsKeyDown(Keys.Right) && dir != "left")
                             dir = "right";
-                        else if (newState.IsKeyDown(Keys.Left) && oldState.IsKeyDown(Keys.Left) && dir != "right")
+                        else if (newState.IsKeyDown(Keys.Left) && dir != "right")
                             dir = "left";
-                        else if (newState.IsKeyDown(Keys.Up) && oldState.IsKeyDown(Keys.Up) && dir != "down")
+                        else if (newState.IsKeyDown(Keys.Up) && dir != "down")
                             dir = "up";
-                        else if (newState.IsKeyDown(Keys.Down) && oldState.IsKeyDown(Keys.Down) && dir != "up")
+                        else if (newState.IsKeyDown(Keys.Down) && dir != "up")
                             dir = "down";
                         else if (newState.IsKeyDown(Keys.Space) && !oldState.IsKeyDown(Keys.Space) && !isPaused)
                         {
@@ -358,8 +358,8 @@ namespace Snake
             //End Upper Border
 
             //Bottom Border
-            startPoint = new Vector2(5, 595);
-            endPoint = new Vector2(795, 595);
+            startPoint = new Vector2(5, 593);
+            endPoint = new Vector2(795, 593);
             edge = endPoint - startPoint;
 
             temp.X = (int)startPoint.X;
@@ -385,7 +385,7 @@ namespace Snake
 
             //Right Border
             startPoint = new Vector2(793, 5);
-            endPoint = new Vector2(793, 597);
+            endPoint = new Vector2(793, 595);
             edge = endPoint - startPoint;
 
             temp.X = (int)startPoint.X;
@@ -406,7 +406,7 @@ namespace Snake
 
             for (int i = length - 1; i >= 0; i--)
             {
-                snakeStruct.Add(new Vector2(i * cw + 15, 18));
+                snakeStruct.Add(new Vector2(i * cw * 2, 20));
             }
 
             headSnake = new Rectangle((int)snakeStruct[0].X, (int)snakeStruct[0].Y, 10, 10);
@@ -415,7 +415,7 @@ namespace Snake
         protected void createFood()
         {
             Random rand = new Random(Environment.TickCount);
-
+                
             int x = rand.Next(10, 780);
             int y = rand.Next(10, 580);
 
