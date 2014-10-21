@@ -23,12 +23,21 @@ namespace Snake
     {
         #region Dependencies
 
+        private enum GameState
+        {
+            Pause,
+            Playing,
+            Win,
+            Lose
+        }
+
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
 
         Texture2D snakeTex;
         Texture2D border;
         SpriteFont scoreFont;
+        SpriteFont endFont;
 
         List<Vector2> snakeStruct;
         List<Rectangle> bordersRect;
@@ -40,14 +49,10 @@ namespace Snake
         int score;        
 
         string dir;
+        string oldDir;
 
-        private enum GameState
-        {
-            Pause,
-            Playing,
-            Win,
-            Lose
-        }
+        bool isPaused;
+        KeyboardState oldState;
 
         GameState stateOfGame;
 
@@ -77,6 +82,7 @@ namespace Snake
 
             cw = 10;
             score = 0;
+            isPaused = false;
 
             createBorders();
             createSnake();
@@ -98,6 +104,7 @@ namespace Snake
             spriteBatch = new SpriteBatch(GraphicsDevice);
             snakeTex = Content.Load<Texture2D>("Snake");
             scoreFont = Content.Load<SpriteFont>("ScoreFont");
+            endFont = Content.Load<SpriteFont>("endFont");
 
             border = new Texture2D(GraphicsDevice, 1, 1);
             border.SetData<Color>(new Color[] { Color.White });
@@ -126,16 +133,25 @@ namespace Snake
             {
                 case GameState.Playing:
                     {
-                        if (Keyboard.GetState().IsKeyDown(Keys.Right) && dir != "left")
+                        var newState = Keyboard.GetState();
+
+                        if (newState.IsKeyDown(Keys.Right) && oldState.IsKeyDown(Keys.Right) && dir != "left")
                             dir = "right";
-                        else if (Keyboard.GetState().IsKeyDown(Keys.Left) && dir != "right")
+                        else if (newState.IsKeyDown(Keys.Left) && oldState.IsKeyDown(Keys.Left) && dir != "right")
                             dir = "left";
-                        else if (Keyboard.GetState().IsKeyDown(Keys.Up) && dir != "down")
+                        else if (newState.IsKeyDown(Keys.Up) && oldState.IsKeyDown(Keys.Up) && dir != "down")
                             dir = "up";
-                        else if (Keyboard.GetState().IsKeyDown(Keys.Down) && dir != "up")
+                        else if (newState.IsKeyDown(Keys.Down) && oldState.IsKeyDown(Keys.Down) && dir != "up")
                             dir = "down";
-                        else if (Keyboard.GetState().IsKeyDown(Keys.Space))
+                        else if (newState.IsKeyDown(Keys.Space) && !oldState.IsKeyDown(Keys.Space) && !isPaused)
+                        {
+                            isPaused = true;
+                            oldDir = dir;
                             dir = "stop";
+                            stateOfGame = GameState.Pause;
+                        }
+
+                        oldState = newState;
 
                         if (dir != "stop")
                         {
@@ -187,12 +203,37 @@ namespace Snake
 
                         #endregion    
 
+                        if (score >= 500)
+                            stateOfGame = GameState.Win;
+                    }
+                    break;
+
+                case GameState.Pause:
+                    {
+                        var newState = Keyboard.GetState();
+
+                        if (newState.IsKeyDown(Keys.Space) && !oldState.IsKeyDown(Keys.Space) && isPaused)
+                        {
+                            isPaused = false;
+                            dir = oldDir;
+                            stateOfGame = GameState.Playing;
+                        }
+
+                        oldState = newState;
                     }
                     break;
 
                 case GameState.Lose:
                     {
-                        Initialize();
+                        if(Keyboard.GetState().IsKeyDown(Keys.Enter))
+                            Initialize();
+                    }
+                    break;
+
+                case GameState.Win:
+                    {
+                        if (Keyboard.GetState().IsKeyDown(Keys.Enter))
+                            Initialize();
                     }
                     break;
             }
@@ -207,27 +248,58 @@ namespace Snake
         /// <summary>
         /// This is called when the game should draw itself.
         /// </summary>
-        /// <param name="gameTime">Provides a snapshot of timing values.</param>
+        /// <param name="gameTime">Provides xa snapshot of timing values.</param>
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.White);
 
-            spriteBatch.Begin();
+            switch(stateOfGame)
+            {
+                case GameState.Pause:
+                case GameState.Playing:
+                    {
+                        spriteBatch.Begin();
 
-            //Draw snake
-            foreach (Vector2 body in snakeStruct)
-                spriteBatch.Draw(snakeTex, body, Color.White);
+                        //Draw snake
+                        foreach (Vector2 body in snakeStruct)
+                            spriteBatch.Draw(snakeTex, body, Color.White);
 
-            //Draw borders of the game
-            DrawLine();
+                        //Draw borders of the game
+                        DrawLine();
 
-            //Draw Food
-            DrawFood();
+                        //Draw Food
+                        DrawFood();
 
-            //Draw Score
-            spriteBatch.DrawString(scoreFont, "Score: " + score, new Vector2(10, 573), Color.Blue); 
+                        //Draw Score
+                        spriteBatch.DrawString(scoreFont, "Score: " + score, new Vector2(10, 573), Color.Blue);
 
-            spriteBatch.End();
+                        if(stateOfGame == GameState.Pause)
+                        {
+                            spriteBatch.Draw(snakeTex, new Rectangle(0, 0, 800, 600), new Color(255, 255, 255, 100));
+                            spriteBatch.DrawString(endFont, "   In pause!\nPress  space\n to resume!", new Vector2(150, 100), Color.Black);
+                        }
+
+
+                        spriteBatch.End();
+                    }
+                    break;
+
+                case GameState.Lose:
+                    {                         
+                        spriteBatch.Begin();
+                        spriteBatch.DrawString(endFont, "        You lose\n        Score: " + score + "\nPress Enter to start again", new Vector2(20, 100), Color.Black);
+                        spriteBatch.End();
+                    }
+                    break;
+                    
+                case GameState.Win:
+                    {
+                        spriteBatch.Begin();
+                        spriteBatch.DrawString(endFont, "You Win! Congrats!\n        Score: " + score + "\nPress Enter to start again", new Vector2(15, 100), Color.Black);
+                        spriteBatch.End();
+                    }
+                    break;
+            }
 
             base.Draw(gameTime);
         }
